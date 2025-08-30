@@ -1,0 +1,120 @@
+{
+  "name": "ai-education-notion-sync",
+  "displayName": "AI Education Platform - Notion Sync",
+  "description": "Automatically sync development progress with Notion workspace",
+  "version": "1.0.0",
+  "publisher": "ai-education-team",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiEducation.updateTask",
+        "title": "Update Task Status",
+        "category": "AI Education"
+      },
+      {
+        "command": "aiEducation.createTaskFromTODO", 
+        "title": "Create Task from TODO",
+        "category": "AI Education"
+      },
+      {
+        "command": "aiEducation.generateDailyStandup",
+        "title": "Generate Daily Standup",
+        "category": "AI Education"
+      },
+      {
+        "command": "aiEducation.syncNow",
+        "title": "Sync with Notion Now",
+        "category": "AI Education"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "aiEducation.updateTask",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "aiEducation.generateDailyStandup",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "notionStatus",
+          "name": "Notion Status",
+          "when": "aiEducation.enabled"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Education Platform",
+      "properties": {
+        "aiEducation.notionToken": {
+          "type": "string",
+          "description": "Your Notion Integration Token",
+          "scope": "machine-overridable"
+        },
+        "aiEducation.databases": {
+          "type": "object",
+          "description": "Notion Database IDs",
+          "properties": {
+            "tasks": {
+              "type": "string",
+              "description": "Tasks Database ID"
+            },
+            "metrics": {
+              "type": "string", 
+              "description": "Metrics Database ID"
+            },
+            "sprints": {
+              "type": "string",
+              "description": "Sprints Database ID"
+            }
+          },
+          "default": {
+            "tasks": "3237c31d-9462-4560-b53f-bcf5705464e9",
+            "metrics": "bced96bd-f065-48e6-8d68-aea1e307e1ed",
+            "sprints": "f5f6e55f-55c9-4b7c-9c2b-da71aabf4e4b"
+          }
+        },
+        "aiEducation.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically sync changes with Notion"
+        },
+        "aiEducation.syncInterval": {
+          "type": "number",
+          "default": 300,
+          "description": "Sync interval in seconds"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "install-extension": "code --install-extension ai-education-notion-sync-1.0.0.vsix"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.13"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@types/node": "^16.11.7",
+    "typescript": "^4.7.4",
+    "vsce": "^2.15.0"
+  }
+}

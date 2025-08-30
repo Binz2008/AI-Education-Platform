@@ -70,6 +70,31 @@ coverage/
 htmlcov/
 .pytest_cache/
 
+# Secrets and API Keys
+*.alloy
+**/alloy_config.*
+**/grafana_config.*
+**/*token*
+**/*secret*
+**/*key*
+!package-lock.json
+!*.key.example
+
+# Large files
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Specific large files that caused push issues
+**/alloy-windows-amd64.exe*
+**/biome.exe
+node_modules/@biomejs/cli-win32-x64/
+
 # Database
 *.db
 *.sqlite

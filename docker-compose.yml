@@ -35,8 +35,24 @@ services:
     environment:
       DATABASE_URL: postgresql://dev_user:dev_password@postgres:5432/ai_education
       REDIS_URL: redis://redis:6379
+      # GitHub Integration
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPO_OWNER: ${GITHUB_REPO_OWNER:-Binz2008}
+      GITHUB_REPO_NAME: ${GITHUB_REPO_NAME:-AI-Education-Platform}
+      # AI Services
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Notion Integration
+      NOTION_TOKEN: ${NOTION_TOKEN:-}
+      NOTION_TASKS_DB: ${NOTION_TASKS_DB:-}
+      NOTION_METRICS_DB: ${NOTION_METRICS_DB:-}
+      NOTION_SPRINTS_DB: ${NOTION_SPRINTS_DB:-}
+      # Security
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key}
+      SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
     ports:
       - "8000:8000"
     depends_on:

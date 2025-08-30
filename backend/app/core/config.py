@@ -24,9 +24,23 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://ai-education-platform.com"]
 
+    # GitHub Integration
+    GITHUB_TOKEN: str | None = None
+    GITHUB_REPO_OWNER: str = "Binz2008"
+    GITHUB_REPO_NAME: str = "AI-Education-Platform"
+
     # AI Services
     OPENAI_API_KEY: str | None = None
     ANTHROPIC_API_KEY: str | None = None
+    HUGGINGFACE_TOKEN: str | None = None
+    DEEPSEEK_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+
+    # Notion Integration
+    NOTION_TOKEN: str | None = None
+    NOTION_TASKS_DB: str | None = None
+    NOTION_METRICS_DB: str | None = None
+    NOTION_SPRINTS_DB: str | None = None
 
     # File Storage
     UPLOAD_DIR: str = "uploads"

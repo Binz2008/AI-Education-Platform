@@ -1,0 +1,49 @@
+repos:
+  - repo: local
+    hooks:
+      - id: path-guardian-check
+        name: Path Guardian Structure Check
+        entry: python scripts/path_guardian.py scan
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        
+      - id: path-guardian-validate
+        name: Path Guardian File Validation
+        entry: python scripts/path_guardian.py validate
+        language: system
+        files: \.(py|tsx?|sql)$
+        stages: [commit]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        files: ^backend/.*\.py$
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.270
+    hooks:
+      - id: ruff
+        files: ^backend/.*\.py$
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.44.0
+    hooks:
+      - id: eslint
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        additional_dependencies:
+          - eslint@8.44.0
+          - "@typescript-eslint/eslint-plugin@5.60.1"
+          - "@typescript-eslint/parser@5.60.1"

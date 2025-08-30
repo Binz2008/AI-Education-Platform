@@ -1,0 +1,239 @@
+name: 🔄 Notion Workspace Sync
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 9 * * 1-5'  # كل يوم عمل الساعة 9 صباحاً
+
+jobs:
+  notion-sync:
+    name: Sync with Notion
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        
+    - name: 📊 Analyze Code Changes
+      id: analyze
+      run: |
+        # Count TypeScript files changed
+        TS_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(ts|tsx)$' | wc -l)
+        PY_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.py$' | wc -l) 
+        
+        # Check for TODO comments
+        TODO_COUNT=$(grep -r "TODO\|FIXME\|BUG" --include="*.ts" --include="*.tsx" --include="*.py" . | wc -l)
+        
+        # Count total files
+        TOTAL_TS=$(find . -name "*.ts" -o -name "*.tsx" | grep -v node_modules | wc -l)
+        TOTAL_PY=$(find . -name "*.py" | grep -v node_modules | wc -l)
+        
+        echo "ts_files_changed=$TS_FILES" >> $GITHUB_OUTPUT
+        echo "py_files_changed=$PY_FILES" >> $GITHUB_OUTPUT  
+        echo "todo_count=$TODO_COUNT" >> $GITHUB_OUTPUT
+        echo "total_ts_files=$TOTAL_TS" >> $GITHUB_OUTPUT
+        echo "total_py_files=$TOTAL_PY" >> $GITHUB_OUTPUT
+        
+    - name: 🔄 Update Notion Task Status from Commit
+      if: github.event_name == 'push'
+      run: |
+        # Extract task info from commit message
+        COMMIT_MSG="${{ github.event.head_commit.message }}"
+        TASK_ID=$(echo "$COMMIT_MSG" | grep -oP '(?<=\[)[A-Z0-9-]+(?=\])')
+        
+        if [ ! -z "$TASK_ID" ]; then
+          echo "Found task ID: $TASK_ID"
+          curl -X PATCH "https://api.notion.com/v1/pages/$TASK_ID" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d '{
+              "properties": {
+                "Status": { "select": { "name": "⏳ In Progress" } },
+                "Notes": { 
+                  "rich_text": [{ 
+                    "text": { 
+                      "content": "Updated from commit: '"$COMMIT_MSG"'" 
+                    } 
+                  }] 
+                },
+                "Last Updated": {
+                  "date": { "start": "'$(date -I)'" }
+                }
+              }
+            }'
+        else
+          echo "No task ID found in commit message"
+        fi
+        
+    - name: 📈 Update Code Quality Metrics
+      run: |
+        # Update TODO Count metric
+        curl -X POST "https://api.notion.com/v1/databases/${{ secrets.NOTION_METRICS_DB }}/query" \
+          -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -H "Notion-Version: 2022-06-28" \
+          -d '{
+            "filter": {
+              "property": "Metric",
+              "title": { "contains": "TODO Count" }
+            }
+          }' > notion_response.json
+          
+        TODO_PAGE_ID=$(cat notion_response.json | jq -r '.results[0].id // empty')
+        
+        if [ ! -z "$TODO_PAGE_ID" ] && [ "$TODO_PAGE_ID" != "null" ]; then
+          echo "Updating TODO Count metric: ${{ steps.analyze.outputs.todo_count }}"
+          curl -X PATCH "https://api.notion.com/v1/pages/$TODO_PAGE_ID" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d '{
+              "properties": {
+                "Current Value": { "number": '${{ steps.analyze.outputs.todo_count }}' },
+                "Last Updated": { 
+                  "date": { "start": "'$(date -I)'" } 
+                }
+              }
+            }'
+        else
+          echo "Creating new TODO Count metric"
+          curl -X POST "https://api.notion.com/v1/pages" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d '{
+              "parent": { "database_id": "${{ secrets.NOTION_METRICS_DB }}" },
+              "properties": {
+                "Metric": { 
+                  "title": [{ "text": { "content": "TODO Count" } }] 
+                },
+                "Current Value": { "number": '${{ steps.analyze.outputs.todo_count }}' },
+                "Target Value": { "number": 0 },
+                "Status": { 
+                  "select": { 
+                    "name": "'$(if [ ${{ steps.analyze.outputs.todo_count }} -gt 20 ]; then echo "🚨 Critical"; elif [ ${{ steps.analyze.outputs.todo_count }} -gt 10 ]; then echo "⚠️ Warning"; else echo "✅ Good"; fi)'" 
+                  } 
+                },
+                "Last Updated": { 
+                  "date": { "start": "'$(date -I)'" } 
+                }
+              }
+            }'
+        fi
+        
+    - name: 📊 Update File Count Metrics
+      run: |
+        # Update TypeScript Files metric
+        curl -X POST "https://api.notion.com/v1/databases/${{ secrets.NOTION_METRICS_DB }}/query" \
+          -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -H "Notion-Version: 2022-06-28" \
+          -d '{
+            "filter": {
+              "property": "Metric",
+              "title": { "contains": "TypeScript Files" }
+            }
+          }' > ts_metric_response.json
+          
+        TS_PAGE_ID=$(cat ts_metric_response.json | jq -r '.results[0].id // empty')
+        
+        if [ ! -z "$TS_PAGE_ID" ] && [ "$TS_PAGE_ID" != "null" ]; then
+          curl -X PATCH "https://api.notion.com/v1/pages/$TS_PAGE_ID" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d '{
+              "properties": {
+                "Current Value": { "number": '${{ steps.analyze.outputs.total_ts_files }}' },
+                "Last Updated": { "date": { "start": "'$(date -I)'" } }
+              }
+            }'
+        fi
+        
+        # Update Python Files metric
+        curl -X POST "https://api.notion.com/v1/databases/${{ secrets.NOTION_METRICS_DB }}/query" \
+          -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -H "Notion-Version: 2022-06-28" \
+          -d '{
+            "filter": {
+              "property": "Metric",
+              "title": { "contains": "Python Files" }
+            }
+          }' > py_metric_response.json
+          
+        PY_PAGE_ID=$(cat py_metric_response.json | jq -r '.results[0].id // empty')
+        
+        if [ ! -z "$PY_PAGE_ID" ] && [ "$PY_PAGE_ID" != "null" ]; then
+          curl -X PATCH "https://api.notion.com/v1/pages/$PY_PAGE_ID" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d '{
+              "properties": {
+                "Current Value": { "number": '${{ steps.analyze.outputs.total_py_files }}' },
+                "Last Updated": { "date": { "start": "'$(date -I)'" } }
+              }
+            }'
+        fi
+        
+    - name: 📝 Create PR Task in Notion
+      if: github.event_name == 'pull_request'
+      run: |
+        # Determine team based on files changed
+        TEAM="Backend"
+        if [ ${{ steps.analyze.outputs.ts_files_changed }} -gt 0 ]; then
+          TEAM="Frontend"
+        fi
+        
+        # Determine priority based on PR size
+        PRIORITY="📊 Medium"
+        TOTAL_CHANGES=$((${{ steps.analyze.outputs.ts_files_changed }} + ${{ steps.analyze.outputs.py_files_changed }}))
+        if [ $TOTAL_CHANGES -gt 10 ]; then
+          PRIORITY="⚡ High"
+        elif [ $TOTAL_CHANGES -lt 3 ]; then
+          PRIORITY="🔽 Low"
+        fi
+        
+        curl -X POST "https://api.notion.com/v1/pages" \
+          -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -H "Notion-Version: 2022-06-28" \
+          -d '{
+            "parent": { "database_id": "${{ secrets.NOTION_TASKS_DB }}" },
+            "properties": {
+              "Task": { 
+                "title": [{ 
+                  "text": { 
+                    "content": "PR: ${{ github.event.pull_request.title }}" 
+                  } 
+                }] 
+              },
+              "Status": { "select": { "name": "👀 Review" } },
+              "Team": { "select": { "name": "'"$TEAM"'" } },
+              "Priority": { "select": { "name": "'"$PRIORITY"'" } },
+              "Notes": { 
+                "rich_text": [{ 
+                  "text": { 
+                    "content": "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.html_url }}\nFiles changed: TS=${{ steps.analyze.outputs.ts_files_changed }}, PY=${{ steps.analyze.outputs.py_files_changed }}" 
+                  } 
+                }] 
+              },
+              "Created Date": {
+                "date": { "start": "'$(date -I)'" }
+              }
+            }
+          }'
+          
+    - name: 🎉 Notify Success
+      run: |
+        echo "✅ Successfully synced with Notion!"
+        echo "📊 Files changed: TS=${{ steps.analyze.outputs.ts_files_changed }}, PY=${{ steps.analyze.outputs.py_files_changed }}"
+        echo "📝 TODO count: ${{ steps.analyze.outputs.todo_count }}"
+        echo "📁 Total files: TS=${{ steps.analyze.outputs.total_ts_files }}, PY=${{ steps.analyze.outputs.total_py_files }}"
