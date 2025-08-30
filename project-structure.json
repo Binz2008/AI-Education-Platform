@@ -1,0 +1,63 @@
+{
+  "projectName": "AI Education Platform",
+  "rootPath": "F:\\jarv\\supernova_main\\ai-education-platform",
+  "enforceStructure": true,
+  "standardPaths": {
+    "backend": {
+      "root": "backend",
+      "app": "backend/app",
+      "models": "backend/app/models",
+      "api": "backend/app/api",
+      "agents": "backend/app/agents",
+      "core": "backend/app/core",
+      "schemas": "backend/app/schemas",
+      "tests": "backend/tests"
+    },
+    "frontend": {
+      "root": "frontend",
+      "app": "frontend/app",
+      "components": "frontend/components",
+      "ui": "frontend/components/ui",
+      "lib": "frontend/lib",
+      "public": "frontend/public",
+      "state": "frontend/state",
+      "styles": "frontend/styles"
+    },
+    "shared": {
+      "packages": "packages",
+      "schemas": "packages/schemas",
+      "config": ".vscode",
+      "docs": "docs"
+    }
+  },
+  "fileTypeRules": {
+    "python": {
+      "allowedPaths": ["backend", "scripts"],
+      "extensions": [".py"],
+      "enforceNaming": "snake_case"
+    },
+    "typescript": {
+      "allowedPaths": ["frontend", "packages"],
+      "extensions": [".ts", ".tsx"],
+      "enforceNaming": "kebab-case"
+    },
+    "react": {
+      "allowedPaths": ["frontend", "packages"],
+      "extensions": [".tsx"],
+      "enforceNaming": "kebab-case"
+    },
+    "sql": {
+      "allowedPaths": ["backend"],
+      "extensions": [".sql"],
+      "enforceNaming": "snake_case"
+    }
+  },
+  "restrictions": {
+    "noMixedLanguages": true,
+    "enforceDirectoryStructure": true,
+    "preventDeepNesting": {
+      "maxDepth": 5,
+      "exceptions": ["node_modules", ".next", "__pycache__"]
+    }
+  }
+}

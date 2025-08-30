@@ -1,0 +1,51 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "termsAccepted": "I agree to the terms and conditions"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "children": "Children",
+    "progress": "Progress",
+    "lessons": "Lessons",
+    "reports": "Reports"
+  },
+  "children": {
+    "title": "Manage Children",
+    "addChild": "Add Child",
+    "editChild": "Edit Child",
+    "deleteChild": "Delete Child",
+    "childName": "Child Name",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "preferredLanguage": "Preferred Language",
+    "learningLevel": "Learning Level",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced"
+  }
+}
