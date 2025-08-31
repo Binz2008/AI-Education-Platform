@@ -1,0 +1,31 @@
+# Node/Next
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+build/
+out/
+coverage/
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+Thumbs.db
+
+# Legacy / Big stuff
+supernova_clean/
+legacy/
+_archive/
+*.exe
+*.zip
+*.vsix
+
+# VSCode extension
+vscode-extension/out/
+vscode-extension/node_modules/
